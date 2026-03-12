@@ -2,13 +2,33 @@ import streamlit as st
 
 st.set_page_config(page_title="AI Analytics Dashboard", layout="wide")
 
-st.title("AI Analytics Dashboard Suite")
+# simple login state
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
 
-st.write("Welcome to the dashboard!")
+# login page
+if not st.session_state.logged_in:
 
-st.write("Modules in this project:")
+    st.title("AI Analytics Dashboard Login")
 
-st.write("1. Student Performance Analytics")
-st.write("2. Resume Analyzer")
-st.write("3. Finance Dashboard")
-st.write("4. Disaster Monitoring Dashboard")
+    username = st.text_input("Username")
+    password = st.text_input("Password", type="password")
+
+    if st.button("Login"):
+
+        if username == "admin" and password == "admin123":
+            st.session_state.logged_in = True
+            st.rerun()
+        else:
+            st.error("Invalid credentials")
+
+# main app
+else:
+
+    st.title("AI Analytics Dashboard Suite")
+
+    st.write("Select a module from the sidebar.")
+
+    if st.button("Logout"):
+        st.session_state.logged_in = False
+        st.rerun()
