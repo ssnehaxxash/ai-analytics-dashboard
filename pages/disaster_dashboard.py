@@ -2,115 +2,122 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-st.title("🌍 Disaster Monitoring Dashboard")
+st.title("🌍 Global Disaster Intelligence Dashboard")
 
-# -----------------------------
-# Session Storage
-# -----------------------------
+st.markdown("Analyze worldwide disaster events using interactive visual analytics.")
 
-if "disaster_data" not in st.session_state:
-    st.session_state.disaster_data = pd.DataFrame(
-        columns=["Disaster","Country","Year","Deaths","Latitude","Longitude"]
+# ------------------------------------------------
+# DATA INPUT
+# ------------------------------------------------
+
+option = st.radio(
+    "Select Data Input Method",
+    ["Upload CSV", "Enter Manually"]
+)
+
+if option == "Upload CSV":
+
+    file = st.file_uploader("Upload Disaster Data CSV")
+
+    if file:
+        data = pd.read_csv(file)
+
+elif option == "Enter Manually":
+
+    st.subheader("Enter Disaster Event")
+
+    disaster = st.selectbox(
+        "Disaster Type",
+        ["Earthquake","Flood","Wildfire","Cyclone","Tsunami"]
     )
 
-# -----------------------------
-# Add Disaster Form
-# -----------------------------
-
-st.subheader("Add Disaster Record")
-
-col1, col2 = st.columns(2)
-
-with col1:
-    disaster = st.text_input("Disaster Type")
-
-with col2:
     country = st.text_input("Country")
 
-col3, col4 = st.columns(2)
+    lat = st.number_input("Latitude")
+    lon = st.number_input("Longitude")
 
-with col3:
-    year = st.number_input("Year", min_value=1900, max_value=2100, step=1)
+    impact = st.selectbox(
+        "Impact Level",
+        ["Low","Medium","High"]
+    )
 
-with col4:
-    deaths = st.number_input("Deaths", min_value=0)
+    if "disaster_data" not in st.session_state:
+        st.session_state.disaster_data = []
 
-col5, col6 = st.columns(2)
+    if st.button("Add Event"):
 
-with col5:
-    latitude = st.number_input("Latitude", value=0.0)
-
-with col6:
-    longitude = st.number_input("Longitude", value=0.0)
-
-if st.button("Add Disaster"):
-
-    if disaster and country:
-
-        new_row = pd.DataFrame({
-            "Disaster":[disaster],
-            "Country":[country],
-            "Year":[year],
-            "Deaths":[deaths],
-            "Latitude":[latitude],
-            "Longitude":[longitude]
+        st.session_state.disaster_data.append({
+            "Disaster":disaster,
+            "Country":country,
+            "Latitude":lat,
+            "Longitude":lon,
+            "Impact":impact
         })
 
-        st.session_state.disaster_data = pd.concat(
-            [st.session_state.disaster_data, new_row],
-            ignore_index=True
-        )
+    data = pd.DataFrame(st.session_state.disaster_data)
 
-        st.success("Disaster record added")
+# ------------------------------------------------
+# VISUALIZATION
+# ------------------------------------------------
 
-    else:
-        st.warning("Please enter disaster and country")
+if 'data' in locals() and not data.empty:
 
-# -----------------------------
-# Display Table
-# -----------------------------
+    st.subheader("Disaster Data")
 
-df = st.session_state.disaster_data
+    st.dataframe(data)
 
-st.subheader("Disaster Records")
+    # ------------------------------------------------
+    # COLORED DISASTER MAP
+    # ------------------------------------------------
 
-st.dataframe(df, use_container_width=True)
+    st.subheader("Interactive Disaster Map")
 
-# -----------------------------
-# Analytics
-# -----------------------------
+    color_map = {
+        "Earthquake":"red",
+        "Flood":"blue",
+        "Wildfire":"orange",
+        "Cyclone":"purple",
+        "Tsunami":"green"
+    }
 
-if len(df) > 0:
-
-    st.subheader("Disaster Statistics")
-
-    col1, col2, col3 = st.columns(3)
-
-    col1.metric("Total Events", len(df))
-    col2.metric("Countries Affected", df["Country"].nunique())
-    col3.metric("Total Deaths", int(df["Deaths"].sum()))
-
-    fig = px.bar(
-        df,
-        x="Country",
-        y="Deaths",
+    fig = px.scatter_geo(
+        data,
+        lat="Latitude",
+        lon="Longitude",
         color="Disaster",
-        title="Disaster Impact by Country"
+        hover_name="Country",
+        size_max=15,
+        color_discrete_map=color_map,
+        title="Global Disaster Events"
+    )
+
+    fig.update_layout(
+        geo=dict(
+            showland=True,
+            landcolor="rgb(217,217,217)"
+        )
     )
 
     st.plotly_chart(fig, use_container_width=True)
 
-# -----------------------------
-# Disaster Map
-# -----------------------------
+    # ------------------------------------------------
+    # HEATMAP
+    # ------------------------------------------------
 
-st.subheader("Disaster Map")
+    st.subheader("Global Disaster Heatmap")
 
-if len(df) > 0:
+    heatmap = px.density_mapbox(
+        data,
+        lat="Latitude",
+        lon="Longitude",
+        radius=20,
+        zoom=1,
+        mapbox_style="carto-darkmatter",
+        title="Disaster Density Heatmap"
+    )
 
-    map_df = df.rename(columns={
-        "Latitude":"lat",
-        "Longitude":"lon"
-    })
+    st.plotly_chart(heatmap, use_container_width=True)
 
-    st.map(map_df)
+else:
+
+    st.info("Upload data or add disaster events to see analytics.")
