@@ -10,7 +10,7 @@ st.title("🌍 Disaster Monitoring Dashboard")
 
 if "disaster_data" not in st.session_state:
     st.session_state.disaster_data = pd.DataFrame(
-        columns=["Disaster","Country","Year","Deaths"]
+        columns=["Disaster","Country","Year","Deaths","Latitude","Longitude"]
     )
 
 # -----------------------------
@@ -35,21 +35,36 @@ with col3:
 with col4:
     deaths = st.number_input("Deaths", min_value=0)
 
+col5, col6 = st.columns(2)
+
+with col5:
+    latitude = st.number_input("Latitude", value=0.0)
+
+with col6:
+    longitude = st.number_input("Longitude", value=0.0)
+
 if st.button("Add Disaster"):
 
-    new_row = pd.DataFrame({
-        "Disaster":[disaster],
-        "Country":[country],
-        "Year":[year],
-        "Deaths":[deaths]
-    })
+    if disaster and country:
 
-    st.session_state.disaster_data = pd.concat(
-        [st.session_state.disaster_data, new_row],
-        ignore_index=True
-    )
+        new_row = pd.DataFrame({
+            "Disaster":[disaster],
+            "Country":[country],
+            "Year":[year],
+            "Deaths":[deaths],
+            "Latitude":[latitude],
+            "Longitude":[longitude]
+        })
 
-    st.success("Disaster added successfully")
+        st.session_state.disaster_data = pd.concat(
+            [st.session_state.disaster_data, new_row],
+            ignore_index=True
+        )
+
+        st.success("Disaster record added")
+
+    else:
+        st.warning("Please enter disaster and country")
 
 # -----------------------------
 # Display Table
@@ -84,3 +99,18 @@ if len(df) > 0:
     )
 
     st.plotly_chart(fig, use_container_width=True)
+
+# -----------------------------
+# Disaster Map
+# -----------------------------
+
+st.subheader("Disaster Map")
+
+if len(df) > 0:
+
+    map_df = df.rename(columns={
+        "Latitude":"lat",
+        "Longitude":"lon"
+    })
+
+    st.map(map_df)
