@@ -83,7 +83,7 @@ ai-analytics-dashboard
 Clone the repository:
 
 ```
-git clone https://github.com/your-username/ai-analytics-dashboard.git
+git clone https://github.com/ssnehaxxash/ai-analytics-dashboard.git
 ```
 
 Navigate to the project folder:
