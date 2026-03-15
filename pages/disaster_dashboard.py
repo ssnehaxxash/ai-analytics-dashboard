@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import requests
 
 st.title("🌍 Global Disaster Intelligence Dashboard")
 
@@ -121,3 +122,50 @@ if 'data' in locals() and not data.empty:
 else:
 
     st.info("Upload data or add disaster events to see analytics.")
+
+# ------------------------------------------------
+# LIVE EARTHQUAKE DATA
+# ------------------------------------------------
+
+st.divider()
+
+st.subheader("🌎 Live Global Earthquake Data")
+
+url = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson"
+
+response = requests.get(url)
+data_json = response.json()
+
+earthquakes = []
+
+for event in data_json["features"]:
+
+    place = event["properties"]["place"]
+    mag = event["properties"]["mag"]
+    coords = event["geometry"]["coordinates"]
+
+    earthquakes.append({
+        "Place": place,
+        "Magnitude": mag,
+        "Longitude": coords[0],
+        "Latitude": coords[1]
+    })
+
+quake_df = pd.DataFrame(earthquakes)
+
+st.write("Recent earthquakes around the world")
+
+st.dataframe(quake_df)
+
+fig = px.scatter_geo(
+    quake_df,
+    lat="Latitude",
+    lon="Longitude",
+    size="Magnitude",
+    hover_name="Place",
+    color="Magnitude",
+    color_continuous_scale="reds",
+    title="Live Global Earthquakes"
+)
+
+st.plotly_chart(fig, use_container_width=True)
