@@ -31,10 +31,20 @@ if "username" not in st.session_state:
     st.session_state.username = ""
 
 # -----------------------------
-# Login / Signup Page
+# LOGIN / SIGNUP PAGE
 # -----------------------------
 
 if not st.session_state.logged_in:
+
+    # Hide sidebar before login
+    st.markdown(
+        """
+        <style>
+        [data-testid="stSidebar"] {display: none;}
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
 
     st.title("Student Analytics Portal")
 
@@ -74,24 +84,25 @@ if not st.session_state.logged_in:
                 st.success("Account created! Please login.")
 
 # -----------------------------
-# Main App
+# MAIN APP
 # -----------------------------
 
 else:
 
+    st.sidebar.title("Navigation")
     st.sidebar.success(f"Logged in as {st.session_state.username}")
-
-    st.title("AI Analytics Dashboard")
-
-    st.write("Welcome to your analytics portal.")
-
-    col1,col2,col3 = st.columns(3)
-
-    col1.metric("Modules",4)
-    col2.metric("Dashboards",3)
-    col3.metric("AI Tools",1)
 
     if st.sidebar.button("Logout"):
         st.session_state.logged_in = False
         st.session_state.username = ""
         st.rerun()
+
+    st.title("AI Analytics Dashboard")
+
+    st.write("Welcome to your analytics portal.")
+
+    col1, col2, col3 = st.columns(3)
+
+    col1.metric("Modules", 4)
+    col2.metric("Dashboards", 3)
+    col3.metric("AI Tools", 1)
