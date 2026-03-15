@@ -1,17 +1,28 @@
 import streamlit as st
+
+# Protect page from unauthorized access
+if "logged_in" not in st.session_state or not st.session_state.logged_in:
+    st.warning("Please login to access this page.")
+    st.stop()
+import streamlit as st
 import pandas as pd
 import plotly.express as px
+import os
 
 st.title("📊 Student Performance Analytics")
 
+username = st.session_state.get("username")
+
+user_file = f"user_data/{username}.csv"
+
 option = st.radio(
     "Choose Data Input Method",
-    ["Upload CSV", "Enter Manually", "Use Sample Data"]
+    ["Upload CSV", "Enter Manually"]
 )
 
-# ----------------------------
+# -------------------------
 # Upload CSV
-# ----------------------------
+# -------------------------
 
 if option == "Upload CSV":
 
@@ -21,23 +32,17 @@ if option == "Upload CSV":
 
         df = pd.read_csv(uploaded_file)
 
-        st.subheader("Dataset Preview")
-        st.dataframe(df)
+        df.to_csv(user_file, index=False)
 
-        fig = px.bar(df, x="Student", y="Marks", color="Subject")
-        st.plotly_chart(fig)
+        st.success("File uploaded to your account")
 
-
-# ----------------------------
-# Manual Entry (MULTIPLE ROWS)
-# ----------------------------
+# -------------------------
+# Manual Entry
+# -------------------------
 
 elif option == "Enter Manually":
 
-    st.subheader("Enter Student Data")
-
-    if "student_data" not in st.session_state:
-        st.session_state.student_data = []
+    st.subheader("Add Student")
 
     name = st.text_input("Student Name")
     subject = st.text_input("Subject")
@@ -51,35 +56,32 @@ elif option == "Enter Manually":
             "Marks": marks
         }
 
-        st.session_state.student_data.append(new_row)
+        if os.path.exists(user_file):
 
-    if len(st.session_state.student_data) > 0:
+            df = pd.read_csv(user_file)
 
-        df = pd.DataFrame(st.session_state.student_data)
+            df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
 
-        st.subheader("Student Dataset")
-        st.dataframe(df)
+        else:
 
-        fig = px.bar(df, x="Student", y="Marks", color="Subject")
-        st.plotly_chart(fig)
+            df = pd.DataFrame([new_row])
 
+        df.to_csv(user_file, index=False)
 
-# ----------------------------
-# Sample Data
-# ----------------------------
+        st.success("Student added")
 
-elif option == "Use Sample Data":
+# -------------------------
+# Display Data
+# -------------------------
 
-    data = {
-        "Student": ["Rahul", "Ananya", "Priya", "Arjun"],
-        "Subject": ["Math", "Physics", "CS", "Math"],
-        "Marks": [88, 91, 95, 76]
-    }
+if os.path.exists(user_file):
 
-    df = pd.DataFrame(data)
+    df = pd.read_csv(user_file)
 
-    st.subheader("Sample Dataset")
+    st.subheader("Your Dataset")
+
     st.dataframe(df)
 
     fig = px.bar(df, x="Student", y="Marks", color="Subject")
+
     st.plotly_chart(fig)
